@@ -2,7 +2,8 @@
 #
 
 require 'rubygems'
-require 'google_chart'
+#require 'google_chart'
+require 'gchart'
 
 require 'parse'
 
@@ -12,6 +13,8 @@ class AltitudeChart
 
   NumPoints = 100
   Size = "500x300"
+  Xsize = 500
+  Ysize = 300
 
   def initialize(track)
     d = track.distance
@@ -39,7 +42,7 @@ class AltitudeChart
   end
 
   # The input is an array of arrays, which are [distance, grade, speed]
-  def url
+  def url_gchartrb
     min = (@points.min.to_i / 100 * 100)
     max = ((@points.max.to_i+100) / 100 * 100)
 
@@ -62,7 +65,35 @@ class AltitudeChart
     l.to_url
   end
 
+  def url_gchart
+    min = (@points.min.to_i / 100 * 100)
+    max = ((@points.max.to_i+100) / 100 * 100)
+
+    scale = 4000.0 / (max - min).to_f
+    shifted_points = @points.map { |p| (p - min) * scale }
+
+    gc = GChart.line do |g|
+      g.data = shifted_points
+      g.colors = [:red ]
+      g.width = Xsize
+      g.height = Ysize
+
+      g.axis(:bottom) do |a|
+        a.range = 0 .. (@track.distance.to_i/1000)
+      end
+
+      g.axis(:right) do |a|
+        a.range = min .. max
+      end
+    end
+    gc.to_url
+  end
+
+  alias_method :url, :url_gchart
+
 end
+
+ff =  GChart.line(:data => [0, 10, 100])
 
 ARGV.each do |file|
   tracks = Gpx.new(file) do |track|
