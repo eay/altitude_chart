@@ -2,6 +2,7 @@
 #
 
 require 'rubygems'
+require 'cgi'
 #require 'google_chart'
 require 'gchart'
 
@@ -73,16 +74,31 @@ class AltitudeChart
     shifted_points = @points.map { |p| (p - min) * scale }
 
     gc = GChart.line do |g|
+      km = @track.distance/1000
+
+      title = @track.name + (" (%.1fkm)" % km)
+#      title.gsub!(/[&"<>\\]/) { |s| ("%%%02X" % s.unpack("C").first) }
+      title.gsub!(/&/,"and")
+      STDERR.puts title
+      g.title = title
+
       g.data = shifted_points
       g.colors = [:red ]
       g.width = Xsize
       g.height = Ysize
 
       g.axis(:bottom) do |a|
-        a.range = 0 .. (@track.distance.to_i/1000)
+        a.range = 0 .. km
       end
 
+      y_step = "%.1f" % (100.0 / ((max - min)/100).to_f)
+      x_step = "%.1f" % (100.0 / (km.to_f / 10.0))
+      g.extras.merge!("chg" => "#{x_step},#{y_step}")
+
       g.axis(:right) do |a|
+        a.range = min .. max
+      end
+      g.axis(:left) do |a|
         a.range = min .. max
       end
     end
@@ -93,15 +109,10 @@ class AltitudeChart
 
 end
 
-ff =  GChart.line(:data => [0, 10, 100])
-
 ARGV.each do |file|
   tracks = Gpx.new(file) do |track|
     chart = AltitudeChart.new(track)
-    puts '<img class="gchart" src="' + chart.url + '">"'
+    puts '<img class="gchart" src="' + chart.url + '">'
 #    system("konqueror '" + chart.url + "'")
   end
-
-  
-
 end
