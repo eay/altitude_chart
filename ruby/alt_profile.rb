@@ -79,7 +79,7 @@ class AltitudeChart
       km = @track.distance/1000
 
       g.title = @track.name + (" (%.1fkm)" % km)
-      STDERR.puts g.title
+#      STDERR.puts g.title
 
       g.data = shifted_points
       g.colors = [:red ]
@@ -88,6 +88,13 @@ class AltitudeChart
 
       g.axis(:bottom) do |a|
         a.range = 0 .. km
+      end
+
+      g.axis(:bottom) do |a|
+        a.labels =         ["Bormio", "Passo del Mortitolo", "Bormio"]
+        a.label_positions = [ 0, 50, 100 ]
+        a.font_size = 10 
+        a.text_color = :blue
       end
 
       y_step = "%.1f" % (100.0 / ((max - min)/100).to_f)
@@ -116,7 +123,7 @@ ARGV.each do |file|
 #    system("konqueror '" + chart.url + "'")
     
     image = Net::HTTP.get(URI.parse(url))
-    filename = data.chart.title.split[0] + ".png"
+    filename = "alt_chart_" + data.chart.title.split[0] + ".png"
     File.open(filename,"wb") do |f|
       f.write(image)
     end

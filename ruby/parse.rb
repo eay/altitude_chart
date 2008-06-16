@@ -18,6 +18,7 @@ class Gpx
     attr_accessor :grade
     attr_accessor :speed
     attr_accessor :point
+    attr_accessor :name   # Generally only waypoints are named
 
     def elev
       @point.elev
@@ -32,10 +33,11 @@ class Gpx
       @distance = 0
       @grade = 0
       @speed = 0
+      @name = ""
     end
 
     def to_s
-      sprintf "speed = %6.2f grade = %6.2f distance = %6.1f #{time}",
+      sprintf "speed = %6.2f grade = %6.2f distance = %6.1f #{time} #{@name}",
         @speed,@grade,@distance
     end
   end
@@ -57,7 +59,16 @@ class Gpx
 
   def initialize(file)
     @tracks = []
+    @way_points = []
     xml = XmlSimple.xml_in(file, "cache" => "storable" )
+
+    # process the way points
+    xml['wpt'].each do |wpt|
+      point = xml_to_track_point(wpt)
+      point.name = wpt['name'].to_s
+      @way_points << point
+      STDERR.puts point.name
+    end
 
     # process the track logs
     xml['trk'].each do |track|
@@ -126,10 +137,22 @@ class Gpx
       raise "invalid previous point" 
     end
 
+    if h['time'].kind_of? Array
+      time = h['time'].first
+    else
+      time = nil
+    end
+
+    if h['ele'].kind_of? Array
+      altitude = h['ele'].first.to_f
+    else
+      altitude = h['ele'].to_f
+    end
+
     gp = GpsPoint.new(:longitude =>  h['lon'].to_f,
                  :latitude => h['lat'].to_f,
-                 :altitude => h['ele'].first.to_f,
-                 :time =>     h['time'].first)
+                 :altitude => altitude,
+                 :time =>     time)
     tp = TrackPoint.new(gp)
     if prev
       tp.distance = gp.distance(prev.point)
