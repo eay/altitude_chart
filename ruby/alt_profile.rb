@@ -6,6 +6,8 @@ require 'cgi'
 #require 'google_chart'
 require 'gchart'
 
+require 'net/http'
+
 require 'parse'
 
 class AltitudeChart
@@ -63,7 +65,7 @@ class AltitudeChart
               :x_step => 100.0/x_step
 #      puts @points.min.to_s + "---" + @points.max.to_s
     end
-    l.to_url
+    l
   end
 
   def url_gchart
@@ -76,11 +78,8 @@ class AltitudeChart
     gc = GChart.line do |g|
       km = @track.distance/1000
 
-      title = @track.name + (" (%.1fkm)" % km)
-#      title.gsub!(/[&"<>\\]/) { |s| ("%%%02X" % s.unpack("C").first) }
-      title.gsub!(/&/,"and")
-      STDERR.puts title
-      g.title = title
+      g.title = @track.name + (" (%.1fkm)" % km)
+      STDERR.puts g.title
 
       g.data = shifted_points
       g.colors = [:red ]
@@ -102,17 +101,25 @@ class AltitudeChart
         a.range = min .. max
       end
     end
-    gc.to_url
+    gc
   end
 
-  alias_method :url, :url_gchart
+  alias_method :chart, :url_gchart
 
 end
 
 ARGV.each do |file|
   tracks = Gpx.new(file) do |track|
-    chart = AltitudeChart.new(track)
-    puts '<img class="gchart" src="' + chart.url + '">'
+    data = AltitudeChart.new(track)
+    url = data.chart.to_url
+#    puts '<img class="gchart" src="' + url + '">'
 #    system("konqueror '" + chart.url + "'")
+    
+    image = Net::HTTP.get(URI.parse(url))
+    filename = data.chart.title.split[0] + ".png"
+    File.open(filename,"wb") do |f|
+      f.write(image)
+    end
+    puts filename
   end
 end
