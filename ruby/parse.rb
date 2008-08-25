@@ -4,7 +4,7 @@ require 'rubygems'
 require 'xmlsimple'
 require 'latitude'
 
-$debug = false
+$debug = true
 
 # Class to parse Gpx format gps data files
 class Gpx
@@ -48,6 +48,7 @@ class Gpx
 
     def initialize(name, array = [])
       super(array)
+      puts array.size
       @name = name
     end
 
@@ -57,12 +58,13 @@ class Gpx
     end
   end
 
-  def initialize(file)
+  def initialize(file,options = {})
     @tracks = []
     @way_points = []
     xml = XmlSimple.xml_in(file, "cache" => "storable" )
 
     # process the way points
+    xml['wpt'] ||= []
     xml['wpt'].each do |wpt|
       point = xml_to_track_point(wpt)
       point.name = wpt['name'].to_s
@@ -104,7 +106,7 @@ class Gpx
               # Also if the 'grade' is too high, drop the segment
               # This is mostly supposed to stop the issue of when the
               # GPS is re-aquiring it's location
-              if ((p.speed > 100.0) || (p.grade.abs > 25.0))
+              if (p.speed > 100.0) || (options[:cycling] && (p.grade.abs > 25.0))
                 if ($debug)
                   STDERR.puts "#{index}:Droping point"
                   STDERR.puts "\t" + ts[-2].to_s

@@ -2,6 +2,7 @@
 #
 
 require 'rubygems'
+require 'optparse'
 require 'cgi'
 #require 'google_chart'
 require 'gchart'
@@ -16,12 +17,13 @@ class AltitudeChart
 
   NumPoints = 100
   Size = "500x300"
-  Xsize = 500
+  Xsize = 700
   Ysize = 300
 
   def initialize(track)
     d = track.distance
     delta = track.distance.to_f / NumPoints
+    puts delta
     upto = delta
     index = 1
     points = []
@@ -29,6 +31,7 @@ class AltitudeChart
     while upto < track.distance
       # Find the point after the 'upto' location
       while track[index].total_distance < upto
+#        puts "#{track[index].total_distance} #{upto} #{track[index].elev.to_i}"
         index += 1
         last if index >= track.size
       end
@@ -36,6 +39,7 @@ class AltitudeChart
 
       # We need to add a value, the altitude should be taken from between
       # track[index-1] and track[index]
+#      puts "#{index}: #{track[index-1].point.distance(track[index].point)}"
       upto += delta
       points << track[index].elev.to_i
     end
@@ -68,9 +72,10 @@ class AltitudeChart
     l
   end
 
-  def url_gchart
+  def url_gchart(options = {})
     min = (@points.min.to_i / 100 * 100)
     max = ((@points.max.to_i+100) / 100 * 100)
+    puts "min= #{min}m max= #{max}m"
 
     scale = 4000.0 / (max - min).to_f
     shifted_points = @points.map { |p| (p - min) * scale }
@@ -90,15 +95,18 @@ class AltitudeChart
         a.range = 0 .. km
       end
 
-      g.axis(:bottom) do |a|
-        a.labels =         ["Bormio", "Passo del Mortitolo", "Bormio"]
-        a.label_positions = [ 0, 50, 100 ]
-        a.font_size = 10 
-        a.text_color = :blue
-      end
+#      g.axis(:bottom) do |a|
+#        a.labels =         ["Bormio", "Passo del Mortitolo", "Bormio"]
+#        a.label_positions = [ 0, 50, 100 ]
+#        a.font_size = 10 
+#        a.text_color = :blue
+#      end
 
+      # One step per 100m altitude
       y_step = "%.1f" % (100.0 / ((max - min)/100).to_f)
-      x_step = "%.1f" % (100.0 / (km.to_f / 10.0))
+      # One step per 10km if cycling, else every 2km
+      km_step = options[:cycling]?10.0:2.0
+      x_step = "%.1f" % (100.0 / (km.to_f / km_step))
       g.extras.merge!("chg" => "#{x_step},#{y_step}")
 
       g.axis(:right) do |a|
@@ -115,15 +123,26 @@ class AltitudeChart
 
 end
 
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{$0} [options]"
+  opts.on("-w", "--bushwalking", "Bushwalking trip") do |v|
+    options[:bushwalking] = v
+  end
+  opts.on("-b", "--cycling", "Bike ride") do |v|
+    options[:cycling] = v
+  end
+end.parse!
+
 ARGV.each do |file|
-  tracks = Gpx.new(file) do |track|
+  tracks = Gpx.new(file,options) do |track|
     data = AltitudeChart.new(track)
-    url = data.chart.to_url
+    url = data.chart(options).to_url
 #    puts '<img class="gchart" src="' + url + '">'
 #    system("konqueror '" + chart.url + "'")
     
     image = Net::HTTP.get(URI.parse(url))
-    filename = "alt_chart_" + data.chart.title.split[0] + ".png"
+    filename = "alt_chart_" + data.chart.title.gsub(/ +/,'_') + ".png"
     File.open(filename,"wb") do |f|
       f.write(image)
     end
