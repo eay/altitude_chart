@@ -85,7 +85,7 @@ class AltitudeChart
       km = @track.distance/1000
       climb = (@track.climb.to_i + 5)/10*10
 
-      g.title = @track.name + (" (%.1fkm" % km) + (" climb %dm)" % climb)
+      g.title = @track.name + (" (%.1fkm," % km) + (" %dm climbed)" % climb)
 #      STDERR.puts g.title
 
       g.data = shifted_points
