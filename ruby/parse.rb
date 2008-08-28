@@ -14,6 +14,7 @@ class Gpx
   class TrackPoint
     # distance from the start
     attr_accessor :total_distance
+    attr_accessor :climb
     attr_accessor :distance
     attr_accessor :grade
     attr_accessor :speed
@@ -31,6 +32,7 @@ class Gpx
       @point = gps_point
       @total_distance = 0
       @distance = 0
+      @climb = 0
       @grade = 0
       @speed = 0
       @name = ""
@@ -45,6 +47,8 @@ class Gpx
   class Track < Array
     attr_accessor :name
     attr_accessor :distance
+    # Amount we have climbed for the trip
+    attr_accessor :climb
 
     def initialize(name, array = [])
       super(array)
@@ -124,6 +128,7 @@ class Gpx
             end
             track = Track.new(name,points)
             next if track.length < 2
+            track.climb = points.last.climb
             track.distance = points.last.total_distance
             yield track
             @tracks << track
@@ -158,6 +163,9 @@ class Gpx
     tp = TrackPoint.new(gp)
     if prev
       tp.distance = gp.distance(prev.point)
+      climb = gp.climb(prev.point)
+      tp.climb = prev.climb
+      tp.climb += climb if climb > 0
       tp.total_distance = prev.total_distance + tp.distance
       tp.grade = gp.grade(prev.point)
       tp.speed = gp.speed_kmh(prev.point)

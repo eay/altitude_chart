@@ -83,8 +83,9 @@ class AltitudeChart
 
     gc = GChart.line do |g|
       km = @track.distance/1000
+      climb = (@track.climb.to_i + 5)/10*10
 
-      g.title = @track.name + (" (%.1fkm)" % km)
+      g.title = @track.name + (" (%.1fkm" % km) + (" climb %dm)" % climb)
 #      STDERR.puts g.title
 
       g.data = shifted_points
@@ -142,8 +143,9 @@ ARGV.each do |file|
 #    puts '<img class="gchart" src="' + url + '">'
 #    system("konqueror '" + chart.url + "'")
     
+    puts "climb = #{track.climb}"
     image = Net::HTTP.get(URI.parse(url))
-    filename = "alt_chart_" + data.chart.title.gsub(/ +/,'_') + ".png"
+    filename = "alt_chart_" + track.name.gsub(/ +/,'_') + ".png"
     File.open(filename,"wb") do |f|
       f.write(image)
     end

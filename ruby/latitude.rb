@@ -95,6 +95,11 @@ class GpsPoint
     (e / d) * 100.0
   end
 
+  # up elevation between the points
+  def climb(p)
+    @elev - p.elev
+  end
+
   def speed_mps(p)
     t = elapsed(p)
     if t == 0.0
