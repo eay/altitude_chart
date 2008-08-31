@@ -104,7 +104,7 @@ class Gpx
               end
 
               # if we have not moved far enough, ignore the current point
-              next if p.distance < 20
+              next if p.distance < 10
   
               # Sometimes we get a 'jump', if so, drop the 'segement'
               # Also if the 'grade' is too high, drop the segment
