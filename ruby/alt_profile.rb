@@ -10,7 +10,7 @@ require 'gchart'
 
 require 'net/http'
 
-require 'parse'
+require 'gpx'
 
 class AltitudeChart
 
