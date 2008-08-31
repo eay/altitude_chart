@@ -10,6 +10,7 @@ $debug = true
 class Gpx
 
   attr_accessor :tracks
+  attr_accessor :way_points
 
   class TrackPoint
     # distance from the start
@@ -52,7 +53,7 @@ class Gpx
 
     def initialize(name, array = [])
       super(array)
-      puts array.size
+#      puts array.size
       @name = name
     end
 
@@ -73,8 +74,10 @@ class Gpx
       point = xml_to_track_point(wpt)
       point.name = wpt['name'].to_s
       @way_points << point
-      STDERR.puts point.name
+#      STDERR.puts point.name
     end
+
+    return if options[:only_waypoints]
 
     # process the track logs
     xml['trk'].each do |track|

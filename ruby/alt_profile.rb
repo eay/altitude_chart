@@ -134,7 +134,18 @@ OptionParser.new do |opts|
   opts.on("-b", "--cycling", "Bike ride") do |v|
     options[:cycling] = v
   end
+  opts.on("-p", "--waypoints",:REQUIRED) do |v|
+    options[:waypoints] = v
+  end
 end.parse!
+
+if options[:waypoints]
+  waypoints = Gpx.new(options[:waypoints],
+                      options.merge(:only_waypoints => true))
+  puts "#{waypoints.way_points.size} waypoints loaded"
+else
+  waypoints = nil
+end
 
 ARGV.each do |file|
   tracks = Gpx.new(file,options) do |track|
