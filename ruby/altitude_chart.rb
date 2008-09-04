@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
+# altitude_chart.rb: Generate a png chart of distance over altitude from
+# a gpx file (an XLM file containg data points from a Garmin GPS)
+#
+#  Usage:  ruby altitude_chart.rb [-b|-cycling] [-w|--bushwalking] [(-p|-waypoings) <waypointfile.gpx)]
 #
 
 $: << File.dirname($0)
@@ -12,6 +16,7 @@ require 'net/http'
 
 require 'gpx'
 
+# This class is used for creation of an altitude vs distance chart
 class AltitudeChart
 
   attr_reader :points,:track
@@ -21,10 +26,11 @@ class AltitudeChart
   Xsize = 700
   Ysize = 300
 
-  def initialize(track)
+  # Pass in the track to render.  The waypoints are an array of [name,distance]
+  # pairs
+  def initialize(track,waypoints = [])
     d = track.distance
     delta = track.distance.to_f / NumPoints
-    puts delta
     upto = delta
     index = 1
     points = []
@@ -45,11 +51,13 @@ class AltitudeChart
       points << track[index].elev.to_i
     end
 
+    @waypoints = waypoints
     @points = points
     @track = track
   end
 
-  # The input is an array of arrays, which are [distance, grade, speed]
+  # Generate the url to use with google charts via the gchatrb package
+  # # We are not using this function right now
   def url_gchartrb
     min = (@points.min.to_i / 100 * 100)
     max = ((@points.max.to_i+100) / 100 * 100)
@@ -73,6 +81,7 @@ class AltitudeChart
     l
   end
 
+  # Generate the url to use with google charts using gchart
   def url_gchart(options = {})
     min = (@points.min.to_i / 100 * 100)
     max = ((@points.max.to_i+100) / 100 * 100)
@@ -97,12 +106,35 @@ class AltitudeChart
         a.range = 0 .. km
       end
 
-#      g.axis(:bottom) do |a|
-#        a.labels =         ["Bormio", "Passo del Mortitolo", "Bormio"]
-#        a.label_positions = [ 0, 50, 100 ]
-#        a.font_size = 10 
-#        a.text_color = :blue
-#      end
+      if @waypoints.size > 0
+        # First, convert the distances to a percentage
+        @waypoints.map! { |d| [d[0], d[1] * 100.0 / @track.distance ]}
+
+        # Two different rows of labels, if 2 points are within 10%,
+        # push the second to the second row
+        top = []
+        bottom = []
+        last_wp = nil
+        @waypoints.each do |wp|
+          if last_wp and ((wp[1] - last_wp[1]) < 10)
+            bottom << wp
+          else
+            top << wp
+            last_wp = wp
+          end
+        end
+        [bottom, top].each do |wps|
+          next if wps.size == 0
+          names, distances = wps.transpose
+
+          g.axis(:top) do |a|
+            a.labels = names
+            a.label_positions = distances
+            a.font_size = 10 
+            a.text_color = :blue
+          end
+        end
+      end
 
       # One step per 100m altitude
       y_step = "%.1f" % (100.0 / ((max - min)/100).to_f)
@@ -121,6 +153,7 @@ class AltitudeChart
     gc
   end
 
+  # Return a GChart object and return it
   alias_method :chart, :url_gchart
 
 end
@@ -140,21 +173,52 @@ OptionParser.new do |opts|
 end.parse!
 
 if options[:waypoints]
-  waypoints = Gpx.new(options[:waypoints],
-                      options.merge(:only_waypoints => true))
-  puts "#{waypoints.way_points.size} waypoints loaded"
+  global_waypoints = Gpx.new(options[:waypoints],
+                      options.merge(:only_waypoints => true)).waypoints
+  puts "#{global_waypoints.size} waypoints loaded"
 else
-  waypoints = nil
+  global_waypoints = []
 end
 
+radius = options[:cycling] ? 200 : 20
+
 ARGV.each do |file|
-  tracks = Gpx.new(file,options) do |track|
-    data = AltitudeChart.new(track)
+  tracks = Gpx.new(file,options) do |track,waypoints|
+    waypoints += global_waypoints
+    box = GpsBox.points(track,radius)
+
+    tr = GpsPoint.new(box.north, box.west)
+    tl = GpsPoint.new(box.north, box.east)
+    br = GpsPoint.new(box.south, box.west)
+    bl = GpsPoint.new(box.south, box.east)
+
+    puts "North edge is #{"%d" % tr.distance(tl)}m"
+    puts "South edge is #{"%d" % br.distance(bl)}m"
+    puts "East edge is  #{"%d" % tr.distance(br)}m"
+    puts "West edge is  #{"%d" % tl.distance(bl)}m"
+
+    wps = box.inside(waypoints)
+    puts "#{wps.size} waypoints in the box"
+    mwps = []
+    wps.each do |wp|
+      d = track.waypoint_distance(wp,radius)
+      mwps <<  [wp.name,d] if d
+    end
+
+    puts mwps.size
+    map_waypoints = mwps.compact.sort { |a,b| a[1] <=> b[1] }
+    map_waypoints.each do |name,distance|
+      puts "#{name} #{"%d" % distance}"
+    end
+
+
+    data = AltitudeChart.new(track,map_waypoints)
     url = data.chart(options).to_url
 #    puts '<img class="gchart" src="' + url + '">'
 #    system("konqueror '" + chart.url + "'")
     
-    puts "climb = #{track.climb}"
+    puts "climb = #{"%d" % track.climb}m"
+    puts "distance = #{"%d" % track.distance}m"
     image = Net::HTTP.get(URI.parse(url))
     filename = "alt_chart_" + track.name.gsub(/ +/,'_') + ".png"
     File.open(filename,"wb") do |f|
