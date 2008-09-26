@@ -15,6 +15,7 @@ require 'gchart'
 require 'net/http'
 
 require 'gpx'
+require 'google-maps'
 
 # This class is used for creation of an altitude vs distance chart
 class AltitudeChart
@@ -170,6 +171,9 @@ OptionParser.new do |opts|
   opts.on("-p", "--waypoints",:REQUIRED) do |v|
     options[:waypoints] = v
   end
+  opts.on("-m", "--googlemaps") do |v|
+    options[:googlemaps] = v
+  end
 end.parse!
 
 if options[:waypoints]
@@ -225,5 +229,16 @@ ARGV.each do |file|
       f.write(image)
     end
     puts filename
+
+    if options[:googlemaps]
+      points = track.collect { |p| [ p.point.lat, p.point.long ] }
+
+      gm = GoogleMaps.new(track.name,points)
+
+      filename = "googlemaps_" + track.name.gsub(/ +/,'_') + ".js"
+      File.open(filename,"wb") do |f|
+        f.write(gm.to_html)
+      end
+    end
   end
 end
