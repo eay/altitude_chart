@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Google Maps JavaScript API Example</title>
+<script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAA9jHfTttPqbsyMMUCL8-LFhSqsOB-DQobJWZPKFhQrqISab9YcBRivHJcqlr_9RjoV6WV6V9ge-wsYw"></script>
+<script type="text/javascript" src="overlay.js"></script>
+<script type="text/javascript">
+  google.load("maps", "2.x");
+   
+  // Call this function when the page has been loaded
+  function load() {
+    var map = new google.maps.Map2(document.getElementById("map"));
+    map.setMapType(G_PHYSICAL_MAP);
+map.setCenter(new google.maps.LatLng(46.2266364115385,10.8814875326923), 13);
+    map.enableScrollWheelZoom();
+    overlay_20080909_Italy_2008_Walk(map);
+    overlay_20080910_Italy_2008_Walk(map);
+    overlay_20080911_Italy_2008_Walk(map);
+    overlay_20080912_Italy_2008_Walk(map);
+    overlay_20080913_Italy_2008_Walk(map);
+    overlay_20080914_Italy_2008_Walk(map);
+    overlay_20080915_Italy_2008_Walk(map);
+    overlay_20080916_Italy_2008_Walk(map);
+    overlay_20080917_Italy_2008_Walk(map);
+    overlay_20080918_Italy_2008_Walk(map);
+    overlay_20080919_Italy_2008_Walk(map);
+  }
+  google.setOnLoadCallback(load);
+</script>
+
+<script type="text/javascript" src="googlemaps_20080909_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080910_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080911_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080912_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080913_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080914_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080915_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080916_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080917_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080918_Italy_2008_Walk.js"></script>
+<script type="text/javascript" src="googlemaps_20080919_Italy_2008_Walk.js"></script>
+
+</head>
+<body onload="load()" onunload="GUnload()">
+	<div id="map" style="width: 100%; height: 1024px;"></div>
+</body>
+</html>
