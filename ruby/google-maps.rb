@@ -5,7 +5,7 @@ require 'rubygems'
 class GoogleMaps
 
   def initialize(name,points)
-    @name = name.gsub(/ +/,'_')
+    @name = name.tr("- :;","_")
     @points = points
     @mid_lat =  points.inject(0.0) do |sum,cords|
       sum += cords[0] 
