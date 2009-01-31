@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'xmlsimple'
-require 'gps-point'
+require 'lib/gps-point'
 
 $debug = true
 

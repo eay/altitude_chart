@@ -14,8 +14,8 @@ require 'gchart'
 
 require 'net/http'
 
-require 'gpx'
-require 'google-maps'
+require 'lib/gpx'
+require 'lib/google-maps'
 
 # This class is used for creation of an altitude vs distance chart
 class AltitudeChart
