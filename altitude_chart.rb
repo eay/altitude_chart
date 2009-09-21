@@ -140,7 +140,7 @@ class AltitudeChart
       # One step per 100m altitude
       y_step = "%.1f" % (100.0 / ((max - min)/100).to_f)
       # One step per 10km if cycling, else every 2km
-      km_step = options[:cycling]?10.0:2.0
+      km_step = options[:cycling]?10.0:1.0
       x_step = "%.1f" % (100.0 / (km.to_f / km_step))
       g.extras.merge!("chg" => "#{x_step},#{y_step}")
 
@@ -184,7 +184,7 @@ else
   global_waypoints = []
 end
 
-radius = options[:cycling] ? 200 : 20
+radius = options[:cycling] ? 200 : 10
 
 ARGV.each do |file|
   tracks = Gpx.new(file,options) do |track,waypoints|
