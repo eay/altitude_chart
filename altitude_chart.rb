@@ -5,7 +5,7 @@
 #  Usage:  ruby altitude_chart.rb [-b|-cycling] [-w|--bushwalking] [(-p|-waypoings) <waypointfile.gpx)]
 #
 
-$: << File.dirname($0)
+$: << File.dirname(__FILE__)
 require 'rubygems'
 require 'optparse'
 require 'cgi'
