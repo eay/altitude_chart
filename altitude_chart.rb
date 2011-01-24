@@ -184,7 +184,7 @@ else
   global_waypoints = []
 end
 
-radius = options[:cycling] ? 200 : 10
+radius = options[:cycling] ? 200 : 50
 
 ARGV.each do |file|
   tracks = Gpx.new(file,options) do |track,waypoints|
