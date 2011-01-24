@@ -131,7 +131,7 @@ class Gpx
     xml['wpt'] ||= []
     xml['wpt'].each do |wpt|
       point = to_way_point(wpt)
-      point.name = wpt['name'].to_s
+      point.name = wpt['name'].first.to_s
       @waypoints << point
 #      STDERR.puts point.name
     end
@@ -140,7 +140,7 @@ class Gpx
 
     # process the track logs
     xml['trk'].each do |track|
-      name = track['name'].to_s
+      name = track['name'].first.to_s
 
       if track['trkseg']
         # process the track segment
@@ -203,7 +203,7 @@ class Gpx
   private 
 
   def to_way_point(ctx)
-    wp = Gpx::WayPoint.new(to_point(ctx), ctx['name'].to_s)
+    wp = Gpx::WayPoint.new(to_point(ctx), ctx['name'].first.to_s)
   end
 
   # Convert
