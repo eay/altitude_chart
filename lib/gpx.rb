@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'xmlsimple'
-require 'lib/gps-point'
+require_relative 'gps-point'
 
 $debug = true
 
@@ -140,7 +140,11 @@ class Gpx
 
     # process the track logs
     xml['trk'].each do |track|
-      name = track['name'].first.to_s
+      if track['name']
+        name = track['name'].first.to_s
+      else
+        name = File.basename(file,".*").gsub(/[_-]/,' ')
+      end
 
       if track['trkseg']
         # process the track segment
@@ -174,7 +178,9 @@ class Gpx
               # GPS is re-aquiring it's location
               if (p.speed > 100.0) || (options[:cycling] && (p.grade.abs > 25.0))
                 if ($debug)
-                  STDERR.puts "#{index}:Droping point"
+                  STDERR.puts "#{index}:Dropping point"
+                  STDERR.puts "\tspeed = #{p.speed}"
+                  STDERR.puts "\tgrade = #{p.grade.abs}"
                   STDERR.puts "\t" + ts[-2].to_s
                   STDERR.puts "\t" + ts[-1].to_s
                   STDERR.puts "\t" + p.to_s

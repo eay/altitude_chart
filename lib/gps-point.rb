@@ -63,14 +63,18 @@ class GpsBox
     if Gpx::Track === points 
       points = points.map { |tp| tp.point }
     end
-    np = points.inject { |a,b| (a.lat > b.lat) ? a : b }
-    sp = points.inject { |a,b| (a.lat < b.lat) ? a : b } 
-    ep =  points.inject { |a,b| (a.long > b.long) ? a : b } 
-    wp =  points.inject { |a,b| (a.long < b.long) ? a : b } 
-    self.new(np.lat  + GpsPoint.new(np.lat,0.0).degrees_per_metre(pad)[0],
-             ep.long + GpsPoint.new(0.0, ep.long).degrees_per_metre(pad)[1],
-             sp.lat  - GpsPoint.new(sp.lat,0.0).degrees_per_metre(pad)[0],
-             wp.long - GpsPoint.new(0.0, wp.long).degrees_per_metre(pad)[1])
+    #np = points.inject { |a,b| (a.lat > b.lat) ? a : b }
+    #sp = points.inject { |a,b| (a.lat < b.lat) ? a : b } 
+    #ep =  points.inject { |a,b| (a.long > b.long) ? a : b } 
+    #wp =  points.inject { |a,b| (a.long < b.long) ? a : b } 
+    n = points.map {|p| p.lat}.max
+    s = points.map {|p| p.lat}.min
+    w = points.map {|p| p.long}.min
+    e = points.map {|p| p.long}.max
+    self.new(n + GpsPoint.new(n,   0.0).degrees_per_metre(pad)[0],
+             e + GpsPoint.new(0.0, e  ).degrees_per_metre(pad)[1],
+             s - GpsPoint.new(s,   0.0).degrees_per_metre(pad)[0],
+             w - GpsPoint.new(0.0, w  ).degrees_per_metre(pad)[1])
   end
 
   def to_s
@@ -88,6 +92,10 @@ class GpsPoint
   EarthRadius = 6371000.0 # in metres
 
   attr_accessor :lat,:long, :elev, :time
+
+  def to_s
+    "lat=%0.6f long=%0.6f elev=%d" % [@lat, @long, @elev.to_i]
+  end
 
   # Create a new point.  The arguments are ether the 4 latitude,
   # longitude, elevelation and time, or a hash containing values for :longitude,

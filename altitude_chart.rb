@@ -5,7 +5,6 @@
 #  Usage:  ruby altitude_chart.rb [-b|-cycling] [-w|--bushwalking] [(-p|-waypoings) <waypointfile.gpx)]
 #
 
-$: << File.dirname(__FILE__)
 require 'rubygems'
 require 'optparse'
 require 'cgi'
@@ -14,8 +13,8 @@ require 'gchart'
 
 require 'net/http'
 
-require 'lib/gpx'
-require 'lib/google-maps'
+require_relative 'lib/gpx'
+require_relative 'lib/google-maps'
 
 # This class is used for creation of an altitude vs distance chart
 class AltitudeChart
