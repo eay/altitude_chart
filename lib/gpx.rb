@@ -78,6 +78,10 @@ class Gpx
     # The amount of climing over the track
     attr_accessor :climb
 
+    def start_time
+      self[0].time
+    end
+
     # Create the new Track with an optional set of points
     def initialize(name, array = [])
       super(array)

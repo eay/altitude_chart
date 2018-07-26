@@ -66,7 +66,8 @@ class AltitudeChart
     shifted_points = @points.map { |p| (p - min) * scale }
 #    puts shifted_points
 
-    l = GoogleChart::LineChart.new(Size,@track.name,false) do |gc|
+    date = @track.start_time.localtime.strftime("%Y-%m-%d")
+    l = GoogleChart::LineChart.new(Size,date + " " + @track.name,false) do |gc|
       gc.data_encoding = :extended
       gc.max_value(4000)
       gc.data nil, shifted_points, 'ff0000'
@@ -94,8 +95,9 @@ class AltitudeChart
       km = @track.distance/1000
       climb = (@track.climb.to_i + 5)/10*10
 
-      g.title = @track.name + (" (%.1fkm," % km) + (" %dm climbed)" % climb)
-#      STDERR.puts g.title
+      date = @track.start_time.localtime.strftime("%Y-%m-%d")
+      g.title = date + " " + @track.name + (" (%.1fkm," % km) + (" %dm climbed)" % climb)
+      STDERR.puts g.title
 
       g.data = shifted_points
       g.colors = [:red ]
@@ -187,6 +189,7 @@ radius = options[:cycling] ? 200 : 50
 
 ARGV.each do |file|
   tracks = Gpx.new(file,options) do |track,waypoints|
+    date = track.start_time.localtime.strftime("%Y-%m-%d")
     waypoints += global_waypoints
     box = GpsBox.points(track,radius)
 
@@ -195,6 +198,7 @@ ARGV.each do |file|
     br = GpsPoint.new(box.south, box.west)
     bl = GpsPoint.new(box.south, box.east)
 
+    puts "Date is #{date}"
     puts "North edge is #{"%d" % tr.distance(tl)}m"
     puts "South edge is #{"%d" % br.distance(bl)}m"
     puts "East edge is  #{"%d" % tr.distance(br)}m"
@@ -223,7 +227,7 @@ ARGV.each do |file|
     puts "climb = #{"%d" % track.climb}m"
     puts "distance = #{"%d" % track.distance}m"
     image = Net::HTTP.get(URI.parse(url))
-    filename = "alt_chart_" + track.name.gsub(/ +/,'_') + ".png"
+    filename = "alt_chart_#{date}_" + track.name.gsub(/ +/,'_').gsub(/\//,"-") + ".png"
     File.open(filename,"wb") do |f|
       f.write(image)
     end
