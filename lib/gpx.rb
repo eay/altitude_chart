@@ -4,10 +4,10 @@ require 'rubygems'
 require 'xmlsimple'
 require_relative 'gps-point'
 
-$debug = true
 
 # Class to parse Gpx format gps data files
 class Gpx
+  attr_reader :debug
 
   # An array of tracks contained in the file
   attr_accessor :tracks
@@ -41,6 +41,16 @@ class Gpx
     attr_accessor :speed
     # The GpsPoint of this TrackPoint
     attr_accessor :point
+
+    # Speed in km/h between two points, or from the last point in no argument
+    def speed(b = nil)
+      return @speed unless b 
+      d = (b.total_distance - @total_distance).abs
+      t = (b.point.time - @point.time).abs
+#      printf "distance = %.2f seconds = %.2f [%.2f - %.2f]\n", d, t, b.total_distance, @total_distance
+      d/t * 60.0 * 60.0 / 1000.0
+    end
+
 
     # The elevation of the TrackPoint
     def elev
@@ -127,6 +137,9 @@ class Gpx
   # :+cycling+, which indicates that this file contains tracks from cycling.
   # We tweak some settings for throwing out invalid values.
   def initialize(file,options = {})
+
+    @debug = options[:debug]
+
     @tracks = []
     @waypoints = []
     xml = XmlSimple.xml_in(file, "cache" => "storable" )
@@ -168,8 +181,8 @@ class Gpx
               # In this case, throw the point away if it has the same time as the
               # next point.
               if p.time == last.time
-                STDERR.puts p.time if $debug
-                STDERR.puts "Dup time: #{index}" if $debug
+                STDERR.puts p.time if @debug
+                STDERR.puts "Dup time: #{index}" if @debug
                 next 
               end
 
@@ -181,7 +194,7 @@ class Gpx
               # This is mostly supposed to stop the issue of when the
               # GPS is re-aquiring it's location
               if (p.speed > 100.0) || (options[:cycling] && (p.grade.abs > 25.0))
-                if ($debug)
+                if (@debug)
                   STDERR.puts "#{index}:Dropping point"
                   STDERR.puts "\tspeed = #{p.speed}"
                   STDERR.puts "\tgrade = #{p.grade.abs}"
@@ -202,7 +215,7 @@ class Gpx
             next if track.length < 2
             track.climb = points.last.climb
             track.distance = points.last.total_distance
-            yield track, @waypoints
+            yield track, @waypoints if block_given?
             @tracks << track
           end
         end
@@ -210,10 +223,30 @@ class Gpx
     end
   end
 
+  # return a single track.  If there are several, merge them
+  def track
+    return @tracks[0] if @tracks.length == 1
+
+    tr = @tracks.dup
+    rt = tr.shift.dup
+    add = rt.distance
+    tr.each do |t|
+      t.each do |tp|
+        p = tp.dup
+        p.total_distance += add
+        rt << p
+      end
+      add = rt.last.total_distance
+    end
+    rt.distance = add
+    rt
+  end
+
+
   private 
 
   def to_way_point(ctx)
-    wp = Gpx::WayPoint.new(to_point(ctx), ctx['name'].first.to_s)
+    Gpx::WayPoint.new(to_point(ctx), ctx['name'].first.to_s)
   end
 
   # Convert
